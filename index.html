@@ -294,6 +294,8 @@
     <option value="name-desc">Name Z→A</option>
     <option value="owners-desc">Most Owners</option>
     <option value="owners-asc">Fewest Owners</option>
+    <option value="onsale-desc">Most Recent Onsale</option>
+    <option value="onsale-asc">Oldest Onsale</option>
   </select>
   <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
   <span class="results-count" id="resultsCount"></span>
@@ -376,14 +378,15 @@ function parseCSV(text) {
     // Skip header rows
     if (first === 'Item Name' || first === '') continue;
 
-    // Data row: Item Name, Item Image, Item Link, Owners
+    // Data row: Item Name, Item Image, Item Link, Owners, Last Onsale
     const name = cols[0] || '';
     const image = cols[1] || '';
     const link = cols[2] || '';
     const owners = cols[3] || '';
+    const lastOnsale = cols[4] || '';
 
     if (name && name !== 'Item Name') {
-      items.push({ name, image, link, owners, tier: currentTier });
+      items.push({ name, image, link, owners, lastOnsale, tier: currentTier });
     }
   }
   return items;
@@ -404,16 +407,26 @@ function tierRank(tier) {
   return idx === -1 ? 99 : idx;
 }
 
+function getItemId(link) {
+  if (!link) return null;
+  const m = link.match(/catalog\/(\d+)/);
+  return m ? m[1] : null;
+}
+
 function renderTable(items) {
   if (!items.length) {
     return `<div class="state-msg"><strong>No items found</strong><p>Try adjusting your search or filters.</p></div>`;
   }
 
   const rows = items.map(item => {
-    const thumb = item.image
-      ? `<img class="item-thumb" src="${item.image}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    const itemId = getItemId(item.link);
+    const thumbSrc = itemId
+      ? `https://www.roblox.com/asset-thumbnail/image?assetId=${itemId}&width=150&height=150&format=png`
+      : null;
+    const thumb = thumbSrc
+      ? `<img class="item-thumb" src="${thumbSrc}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
-    const placeholder = `<div class="thumb-placeholder" ${item.image ? 'style="display:none"' : ''}>🎭</div>`;
+    const placeholder = `<div class="thumb-placeholder" ${thumbSrc ? 'style="display:none"' : ''}>🎭</div>`;
     const linkEl = item.link
       ? `<br><a class="item-link" href="${item.link}" target="_blank">View on Roblox ↗</a>`
       : '';
@@ -422,6 +435,7 @@ function renderTable(items) {
       <td><span class="item-name">${item.name}</span>${linkEl}</td>
       <td><span class="tier-badge ${tierClass(item.tier)}">${item.tier || '?'}</span></td>
       <td class="owners-val">${formatOwners(item.owners)}</td>
+      <td class="owners-val">${item.lastOnsale || '—'}</td>
     </tr>`;
   }).join('');
 
@@ -432,6 +446,7 @@ function renderTable(items) {
         <th>Item Name</th>
         <th>Tier</th>
         <th>Owner Count</th>
+        <th>Last Onsale</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -454,6 +469,12 @@ function getFiltered() {
   if (s === 'name-desc') items.sort((a,b) => b.name.localeCompare(a.name));
   if (s === 'owners-desc') items.sort((a,b) => (parseFloat(b.owners)||0) - (parseFloat(a.owners)||0));
   if (s === 'owners-asc') items.sort((a,b) => (parseFloat(a.owners)||0) - (parseFloat(b.owners)||0));
+  if (s === 'onsale-desc' || s === 'onsale-asc') {
+    items.sort((a,b) => {
+      const da = new Date(a.lastOnsale || 0), db = new Date(b.lastOnsale || 0);
+      return s === 'onsale-desc' ? db - da : da - db;
+    });
+  }
 
   return items;
 }
