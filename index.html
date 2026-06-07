@@ -244,6 +244,10 @@
     .tier-e       { background: rgba(180,40,40,0.15);  color: #c03030; border: 1px solid rgba(180,40,40,0.3); }
     .tier-unknown { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
 
+
+    .lim-yes { color: #3dd68c; font-size: 18px; font-weight: 700; }
+    .lim-no  { color: #5a2a5a; font-size: 18px; font-weight: 700; }
+    .limited-cell { text-align: center; }
     .owners-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); }
 
     .state-msg { text-align: center; padding: 4rem 2rem; position: relative; z-index: 10; }
@@ -544,15 +548,16 @@ function parseCSV(text) {
     // Skip header rows
     if (first === 'Item Name' || first === '') continue;
 
-    // Data row: Item Name, Item Image, Item Link, Owners, Last Onsale
+    // Data row: Item Name, Item Image, Item Link, Owners, Last Onsale, Limited
     const name = cols[0] || '';
     const image = cols[1] || '';
     const link = cols[2] || '';
     const owners = cols[3] || '';
     const lastOnsale = cols[4] || '';
+    const limited = cols[5] || '';
 
     if (name && name !== 'Item Name') {
-      items.push({ name, image, link, owners, lastOnsale, tier: currentTier });
+      items.push({ name, image, link, owners, lastOnsale, limited, tier: currentTier });
     }
   }
   return items;
@@ -600,6 +605,7 @@ function renderTable(items) {
       <td><span class="tier-badge ${tierClass(item.tier)}">${item.tier || '?'}</span></td>
       <td class="owners-val">${formatOwners(item.owners)}</td>
       <td class="owners-val">${item.lastOnsale || '—'}</td>
+      <td class="limited-cell">${isLimited(item.limited) ? '<span class="lim-yes">✓</span>' : '<span class="lim-no">✗</span>'}</td>
     </tr>`;
   }).join('');
 
@@ -611,10 +617,17 @@ function renderTable(items) {
         <th>Tier</th>
         <th>Owner Count</th>
         <th>Last Onsale</th>
+        <th>Limited?</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>`;
+}
+
+function isLimited(val) {
+  if (!val) return false;
+  const v = val.toString().toLowerCase().trim();
+  return v === 'yes' || v === 'true' || v === '1' || v === 'y';
 }
 
 function getFiltered() {
