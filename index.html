@@ -995,15 +995,31 @@ async function startVerification() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${WORKER}/auth/start`, {
+    // Look up user directly from browser — Roblox allows this
+    const res = await fetch(`https://api.roblox.com/users/get-by-username?username=${encodeURIComponent(username)}`);
+    const data = await res.json();
+    if (!res.ok || data.errorMessage || !data.Id) {
+      errEl.textContent = `User "${username}" not found. Check the spelling.`;
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    const code = 'FOI-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+
+    // Store pending verification in worker/Supabase
+    const storeRes = await fetch(`${WORKER}/auth/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username }),
+      body: JSON.stringify({ roblox_id: String(data.Id), username: data.Username, code }),
     });
-    const data = await res.json();
-    if (!res.ok) { errEl.textContent = data.error || 'User not found'; errEl.classList.remove('hidden'); return; }
-    pendingVerification = data;
-    document.getElementById('verifyCode').textContent = data.code;
+    if (!storeRes.ok) {
+      errEl.textContent = 'Could not start verification, try again.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    pendingVerification = { roblox_id: String(data.Id), username: data.Username, code };
+    document.getElementById('verifyCode').textContent = code;
     showStep(2);
   } catch(e) {
     errEl.textContent = 'Something went wrong, try again.';
@@ -1024,6 +1040,18 @@ async function verifyCode() {
   btn.disabled = true;
 
   try {
+    // Fetch profile description directly from browser
+    const profileRes = await fetch(`https://users.roblox.com/v1/users/${pendingVerification.roblox_id}`);
+    const profile = await profileRes.json();
+    const description = profile.description || '';
+
+    if (!description.includes(pendingVerification.code)) {
+      errEl.textContent = 'Code not found in your profile description. Make sure to save after adding it.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    // Tell worker to mark as verified
     const res = await fetch(`${WORKER}/auth/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1032,9 +1060,9 @@ async function verifyCode() {
     const data = await res.json();
     if (!res.ok) { errEl.textContent = data.error; errEl.classList.remove('hidden'); return; }
 
-    currentUser = { roblox_id: data.roblox_id, username: data.username };
+    currentUser = { roblox_id: pendingVerification.roblox_id, username: pendingVerification.username };
     localStorage.setItem('roblox_user', JSON.stringify(currentUser));
-    document.getElementById('successMsg').textContent = `Welcome, ${data.username}! You can now like and dislike items.`;
+    document.getElementById('successMsg').textContent = `Welcome, ${pendingVerification.username}! You can now like and dislike items.`;
     showStep(3);
     renderAuthBar();
     await loadVotes();
@@ -1057,7 +1085,7 @@ function renderAuthBar() {
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>`;
   } else {
-    el.innerHTML = `<button class="login-btn" onclick="openModal()">Login</button>`;
+    el.innerHTML = `<button class="login-btn" onclick="openModal()">Login with Roblox</button>`;
   }
 }
 
