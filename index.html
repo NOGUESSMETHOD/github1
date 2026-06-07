@@ -495,7 +495,7 @@ window.onerror = (msg, src, line, col, err) => {
 };
 
 // Tier order for sorting (best = 0)
-const TIER_ORDER = ['Savior Tier','SS-Tier','S-Tier','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E-Tier'];
+const TIER_ORDER = ['Savior','SS','S','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E'];
 
 function tierClass(tier) {
   const t = (tier||'').toLowerCase().replace(/\s/g,'');
@@ -524,7 +524,7 @@ function parseCSV(text) {
   let currentTier = '';
 
   // Tier header names to detect
-  const tierNames = new Set(['Savior Tier','SS-Tier','S-Tier','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E-Tier','A-Tier','B-Tier','C-Tier','D-Tier']);
+  const tierNames = new Set(['Savior','SS','S','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E','A-Tier','B-Tier','C-Tier','D-Tier']);
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
@@ -705,7 +705,23 @@ async function loadThumbnails() {
 
 function updateStats() {
   document.getElementById('statTotal').textContent = allItems.length.toLocaleString();
-  document.getElementById('statUpdated').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  fetchLastModified();
+}
+
+async function fetchLastModified() {
+  try {
+    const res = await fetch('https://tiny-boat-71e2.noguessmethod.workers.dev/lastmodified');
+    const data = await res.json();
+    if (data.lastModified) {
+      const date = new Date(data.lastModified);
+      document.getElementById('statUpdated').textContent =
+        date.toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'})
+        + ' ' + date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      return;
+    }
+  } catch(e) {}
+  document.getElementById('statUpdated').textContent =
+    new Date().toLocaleDateString([], {month:'short', day:'numeric', year:'numeric'});
 }
 
 async function loadData() {
