@@ -995,8 +995,8 @@ async function startVerification() {
   btn.disabled = true;
 
   try {
-    // Look up user directly from browser — Roblox allows this
-    const res = await fetch(`https://api.roblox.com/users/get-by-username?username=${encodeURIComponent(username)}`);
+    // Look up user via worker proxy (Roblox blocks direct browser requests)
+    const res = await fetch(`${WORKER}/roblox/user?username=${encodeURIComponent(username)}`);
     const data = await res.json();
     if (!res.ok || data.errorMessage || !data.Id) {
       errEl.textContent = `User "${username}" not found. Check the spelling.`;
@@ -1040,8 +1040,8 @@ async function verifyCode() {
   btn.disabled = true;
 
   try {
-    // Fetch profile description directly from browser
-    const profileRes = await fetch(`https://users.roblox.com/v1/users/${pendingVerification.roblox_id}`);
+    // Fetch profile description via worker proxy
+    const profileRes = await fetch(`${WORKER}/roblox/profile?id=${pendingVerification.roblox_id}`);
     const profile = await profileRes.json();
     const description = profile.description || '';
 
