@@ -670,8 +670,7 @@ async function loadThumbnails() {
   // Batch in groups of 50 (Roblox API limit)
   for (let i = 0; i < ids.length; i += 50) {
     const batch = ids.slice(i, i + 50);
-    const apiUrl = 'https://thumbnails.roblox.com/v1/assets?assetIds=' + batch.join(',') + '&size=150x150&format=Png&isCircular=false';
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(apiUrl);
+    const proxyUrl = 'https://tiny-boat-71e2.noguessmethod.workers.dev/?ids=' + batch.join(',');
     try {
       const res = await fetch(proxyUrl);
       if (!res.ok) continue;
