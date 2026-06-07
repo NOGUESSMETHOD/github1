@@ -420,13 +420,11 @@ function renderTable(items) {
 
   const rows = items.map(item => {
     const itemId = getItemId(item.link);
-    const thumbSrc = itemId
-      ? `https://www.roblox.com/asset-thumbnail/image?assetId=${itemId}&width=150&height=150&format=png`
-      : null;
-    const thumb = thumbSrc
-      ? `<img class="item-thumb" src="${thumbSrc}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    const thumbSrc = null;
+    const thumb = itemId
+      ? `<img class="item-thumb" data-itemid="${itemId}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
-    const placeholder = `<div class="thumb-placeholder" ${thumbSrc ? 'style="display:none"' : ''}>🎭</div>`;
+    const placeholder = `<div class="thumb-placeholder" ${itemId ? 'style="display:none"' : ''}>🎭</div>`;
     const linkEl = item.link
       ? `<br><a class="item-link" href="${item.link}" target="_blank">View on Roblox ↗</a>`
       : '';
@@ -496,6 +494,35 @@ function render() {
   const items = getFiltered();
   document.getElementById('content').innerHTML = renderTable(items);
   document.getElementById('resultsCount').textContent = `${items.length} of ${allItems.length} items`;
+  loadThumbnails();
+}
+
+async function loadThumbnails() {
+  const imgs = document.querySelectorAll('img.item-thumb[data-itemid]');
+  if (!imgs.length) return;
+  const ids = [...imgs].map(img => img.dataset.itemid);
+  // Batch in groups of 50 (Roblox API limit)
+  for (let i = 0; i < ids.length; i += 50) {
+    const batch = ids.slice(i, i + 50);
+    const apiUrl = 'https://thumbnails.roblox.com/v1/assets?assetIds=' + batch.join(',') + '&size=150x150&format=Png&isCircular=false';
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(apiUrl);
+    try {
+      const res = await fetch(proxyUrl);
+      if (!res.ok) continue;
+      const data = await res.json();
+      data.data.forEach(item => {
+        if (item.state === 'Completed' && item.imageUrl) {
+          const img = document.querySelector(`img.item-thumb[data-itemid="${item.targetId}"]`);
+          if (img) {
+            img.src = item.imageUrl;
+            img.style.display = 'block';
+            const ph = img.nextElementSibling;
+            if (ph) ph.style.display = 'none';
+          }
+        }
+      });
+    } catch(e) { /* thumbnails failed silently */ }
+  }
 }
 
 function updateStats() {
