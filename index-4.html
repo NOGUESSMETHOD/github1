@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>#freeoffsaleitems — Roblox Item Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080008;
+      --surface: #110011;
+      --surface2: #1a001f;
+      --border: rgba(255,0,255,0.08);
+      --border2: rgba(255,0,255,0.18);
+      --accent: #e800e8;
+      --accent2: #ff44ff;
+      --text: #fceeff;
+      --muted: #b07ab0;
+      --dim: #5a2a5a;
+      --radius: 10px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,0,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,0,255,0.018) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(232,0,232,0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-tag {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      background: rgba(232,0,232,0.1);
+      border: 1px solid rgba(232,0,232,0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      background: linear-gradient(135deg, #fceeff 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle { font-size: 1rem; color: var(--muted); font-weight: 400; }
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
+    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+    .controls {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 15px; }
+    input[type="text"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 10px 14px 10px 36px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--dim); }
+    select {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 10px 32px 10px 14px;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23b07ab0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-color: var(--surface);
+    }
+    select:focus { border-color: var(--accent); }
+    .results-count { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; margin-left: auto; white-space: nowrap; }
+    .refresh-btn {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Table */
+    .table-wrap {
+      position: relative;
+      z-index: 10;
+      padding: 1.5rem 2rem;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 620px; }
+    thead th {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 16px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border2);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    thead th:hover { color: var(--text); }
+    thead th.sorted { color: var(--accent); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 12px 16px; font-size: 14px; vertical-align: middle; }
+
+    .item-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      display: block;
+    }
+    .thumb-placeholder {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--dim);
+    }
+    .item-name {
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .item-link {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      font-family: 'DM Mono', monospace;
+    }
+    .item-link:hover { color: var(--accent); }
+
+    /* Tier badges */
+    .tier-badge {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .tier-savior  { background: rgba(255,215,0,0.15);  color: #ffd700; border: 1px solid rgba(255,215,0,0.3); }
+    .tier-ss      { background: rgba(255,100,255,0.15); color: #ff64ff; border: 1px solid rgba(255,100,255,0.3); }
+    .tier-s       { background: rgba(232,0,232,0.15);  color: #e800e8; border: 1px solid rgba(232,0,232,0.3); }
+    .tier-aplus   { background: rgba(180,50,255,0.15); color: #c060ff; border: 1px solid rgba(180,50,255,0.3); }
+    .tier-a       { background: rgba(130,80,255,0.15); color: #9060f0; border: 1px solid rgba(130,80,255,0.3); }
+    .tier-aminus  { background: rgba(90,100,255,0.15); color: #6070e8; border: 1px solid rgba(90,100,255,0.3); }
+    .tier-bplus   { background: rgba(60,120,255,0.15); color: #4090ff; border: 1px solid rgba(60,120,255,0.3); }
+    .tier-b       { background: rgba(40,140,220,0.15); color: #30a0e0; border: 1px solid rgba(40,140,220,0.3); }
+    .tier-bminus  { background: rgba(30,160,180,0.15); color: #20b0c0; border: 1px solid rgba(30,160,180,0.3); }
+    .tier-cplus   { background: rgba(30,180,140,0.15); color: #20c09a; border: 1px solid rgba(30,180,140,0.3); }
+    .tier-c       { background: rgba(60,180,80,0.15);  color: #40c060; border: 1px solid rgba(60,180,80,0.3); }
+    .tier-cminus  { background: rgba(140,180,40,0.15); color: #90b030; border: 1px solid rgba(140,180,40,0.3); }
+    .tier-dplus   { background: rgba(200,150,30,0.15); color: #c09020; border: 1px solid rgba(200,150,30,0.3); }
+    .tier-d       { background: rgba(220,110,30,0.15); color: #e07020; border: 1px solid rgba(220,110,30,0.3); }
+    .tier-dminus  { background: rgba(220,70,50,0.15);  color: #e04030; border: 1px solid rgba(220,70,50,0.3); }
+    .tier-e       { background: rgba(180,40,40,0.15);  color: #c03030; border: 1px solid rgba(180,40,40,0.3); }
+    .tier-unknown { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+
+    .owners-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); }
+
+    .state-msg { text-align: center; padding: 4rem 2rem; position: relative; z-index: 10; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .state-msg p { color: var(--muted); font-size: 14px; }
+    .state-msg strong { color: var(--text); display: block; font-size: 1rem; margin-bottom: 6px; }
+
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--dim);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+    }
+    @media (max-width: 600px) {
+      .controls { flex-direction: column; align-items: stretch; }
+      .results-count { margin-left: 0; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-tag">Roblox · Offsale Tracker</div>
+  <h1>#freeoffsaleitems</h1>
+  <p class="subtitle">Community-tracked items — tier list &amp; owner data</p>
+</header>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Items</div></div>
+  <div class="stat"><div class="stat-value" id="statUpdated">—</div><div class="stat-label">Last Updated</div></div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search items…" />
+  </div>
+  <select id="tierFilter"><option value="">All Tiers</option></select>
+  <select id="sortSelect">
+    <option value="tier">Sort by Tier</option>
+    <option value="name-asc">Name A→Z</option>
+    <option value="name-desc">Name Z→A</option>
+    <option value="owners-desc">Most Owners</option>
+    <option value="owners-asc">Fewest Owners</option>
+  </select>
+  <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+  <span class="results-count" id="resultsCount"></span>
+</div>
+
+<div id="content">
+  <div class="state-msg" id="loadingMsg">
+    <div class="spinner"></div>
+    <p>Loading items from spreadsheet…</p>
+  </div>
+</div>
+
+<footer>
+  Data sourced from Google Sheets · Updates live on refresh · #freeoffsaleitems
+</footer>
+
+<script>
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYwoHyest59JSUFFpFt05vgR8r7rEWV04p0u8kyLPITCQHkMgXEGWtEqkdG0LQyUqUuvHiSR6QJcCq/pub?output=csv';
+const PROXIES = [
+  SHEET_URL,
+  'https://corsproxy.io/?' + encodeURIComponent(SHEET_URL),
+  'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEET_URL),
+];
+window.onerror = (msg, src, line, col, err) => {
+  const el = document.getElementById('content');
+  if (el) el.innerHTML = '<div class="state-msg"><strong>Script error</strong><p>' + msg + ' (line ' + line + ')</p></div>';
+};
+
+// Tier order for sorting (best = 0)
+const TIER_ORDER = ['Savior Tier','SS-Tier','S-Tier','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E-Tier'];
+
+function tierClass(tier) {
+  const t = (tier||'').toLowerCase().replace(/\s/g,'');
+  if (t.includes('savior')) return 'tier-savior';
+  if (t === 'ss-tier' || t === 'ss') return 'tier-ss';
+  if (t === 's-tier' || t === 's') return 'tier-s';
+  if (t === 'a+') return 'tier-aplus';
+  if (t === 'a') return 'tier-a';
+  if (t === 'a-') return 'tier-aminus';
+  if (t === 'b+') return 'tier-bplus';
+  if (t === 'b') return 'tier-b';
+  if (t === 'b-') return 'tier-bminus';
+  if (t === 'c+') return 'tier-cplus';
+  if (t === 'c') return 'tier-c';
+  if (t === 'c-') return 'tier-cminus';
+  if (t === 'd+') return 'tier-dplus';
+  if (t === 'd') return 'tier-d';
+  if (t === 'd-') return 'tier-dminus';
+  if (t.includes('e')) return 'tier-e';
+  return 'tier-unknown';
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const items = [];
+  let currentTier = '';
+
+  // Tier header names to detect
+  const tierNames = new Set(['Savior Tier','SS-Tier','S-Tier','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','E-Tier','A-Tier','B-Tier','C-Tier','D-Tier']);
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    // Parse CSV columns (handle quoted fields)
+    const cols = [];
+    let inQuote = false, cur = '';
+    for (let c = 0; c < raw.length; c++) {
+      if (raw[c] === '"') { inQuote = !inQuote; }
+      else if (raw[c] === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
+      else { cur += raw[c]; }
+    }
+    cols.push(cur.trim());
+
+    const first = cols[0] || '';
+
+    // Detect tier header rows (they appear as single-value rows or with "Item Name" sub-headers)
+    if (first && !first.includes('http') && (tierNames.has(first) || /^[A-E][+-]?$/.test(first) || first.toLowerCase().includes('tier'))) {
+      if (first !== 'Item Name') currentTier = first;
+      continue;
+    }
+    // Skip header rows
+    if (first === 'Item Name' || first === '') continue;
+
+    // Data row: Item Name, Item Image, Item Link, Owners
+    const name = cols[0] || '';
+    const image = cols[1] || '';
+    const link = cols[2] || '';
+    const owners = cols[3] || '';
+
+    if (name && name !== 'Item Name') {
+      items.push({ name, image, link, owners, tier: currentTier });
+    }
+  }
+  return items;
+}
+
+let allItems = [];
+
+function formatOwners(val) {
+  if (!val || val === '???' || val === '') return '???';
+  const clean = val.replace(/[^0-9.]/g, '');
+  const n = parseFloat(clean);
+  if (isNaN(n)) return val;
+  return Math.round(n).toLocaleString();
+}
+
+function tierRank(tier) {
+  const idx = TIER_ORDER.indexOf(tier);
+  return idx === -1 ? 99 : idx;
+}
+
+function renderTable(items) {
+  if (!items.length) {
+    return `<div class="state-msg"><strong>No items found</strong><p>Try adjusting your search or filters.</p></div>`;
+  }
+
+  const rows = items.map(item => {
+    const thumb = item.image
+      ? `<img class="item-thumb" src="${item.image}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const placeholder = `<div class="thumb-placeholder" ${item.image ? 'style="display:none"' : ''}>🎭</div>`;
+    const linkEl = item.link
+      ? `<br><a class="item-link" href="${item.link}" target="_blank">View on Roblox ↗</a>`
+      : '';
+    return `<tr>
+      <td style="width:60px">${thumb}${placeholder}</td>
+      <td><span class="item-name">${item.name}</span>${linkEl}</td>
+      <td><span class="tier-badge ${tierClass(item.tier)}">${item.tier || '?'}</span></td>
+      <td class="owners-val">${formatOwners(item.owners)}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:60px"></th>
+        <th>Item Name</th>
+        <th>Tier</th>
+        <th>Owner Count</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const tf = document.getElementById('tierFilter').value;
+  const s = document.getElementById('sortSelect').value;
+
+  let items = allItems.filter(item => {
+    const matchQ = !q || item.name.toLowerCase().includes(q);
+    const matchT = !tf || item.tier === tf;
+    return matchQ && matchT;
+  });
+
+  if (s === 'tier') items.sort((a,b) => tierRank(a.tier) - tierRank(b.tier) || a.name.localeCompare(b.name));
+  if (s === 'name-asc') items.sort((a,b) => a.name.localeCompare(b.name));
+  if (s === 'name-desc') items.sort((a,b) => b.name.localeCompare(a.name));
+  if (s === 'owners-desc') items.sort((a,b) => (parseFloat(b.owners)||0) - (parseFloat(a.owners)||0));
+  if (s === 'owners-asc') items.sort((a,b) => (parseFloat(a.owners)||0) - (parseFloat(b.owners)||0));
+
+  return items;
+}
+
+function populateTierFilter() {
+  const tiers = [...new Set(allItems.map(i => i.tier).filter(Boolean))];
+  tiers.sort((a,b) => tierRank(a) - tierRank(b));
+  const sel = document.getElementById('tierFilter');
+  sel.innerHTML = '<option value="">All Tiers</option>';
+  tiers.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
+function render() {
+  const items = getFiltered();
+  document.getElementById('content').innerHTML = renderTable(items);
+  document.getElementById('resultsCount').textContent = `${items.length} of ${allItems.length} items`;
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = allItems.length.toLocaleString();
+  document.getElementById('statUpdated').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+async function loadData() {
+  document.getElementById('content').innerHTML = '<div class="state-msg"><div class="spinner"></div><p>Loading items from spreadsheet\u2026</p></div>';
+  let lastErr = '';
+  for (const url of PROXIES) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) { lastErr = 'HTTP ' + res.status; continue; }
+      const text = await res.text();
+      if (!text || text.trim().startsWith('<')) { lastErr = 'Got HTML instead of CSV'; continue; }
+      allItems = parseCSV(text);
+      if (!allItems.length) { lastErr = 'No items parsed'; continue; }
+      populateTierFilter();
+      updateStats();
+      render();
+      return;
+    } catch(e) { lastErr = e.message; }
+  }
+  document.getElementById('content').innerHTML =
+    '<div class="state-msg"><strong>Could not load data</strong><p>Make sure your sheet is published as CSV (File \u2192 Share \u2192 Publish to web \u2192 CSV).</p><p style="margin-top:8px;font-size:12px;color:#5a2a5a">' + lastErr + '</p></div>';
+}
+
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('tierFilter').addEventListener('change', render);
+document.getElementById('sortSelect').addEventListener('change', render);
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+
+loadData();
+</script>
+</body>
+</html>
