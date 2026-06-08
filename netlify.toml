@@ -1,0 +1,3 @@
+[build]
+  command = "sed -i \"s/__DEPLOY_TIME__/'$(date -u +%Y-%m-%dT%H:%M:%SZ)'/g\" index.html"
+  publish = "."
