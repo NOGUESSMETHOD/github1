@@ -1000,15 +1000,10 @@ async function startVerification() {
   btn.disabled = true;
 
   try {
-    // Look up user ID from username via corsproxy
-    const lookupUrl = 'https://users.roblox.com/v1/usernames/users';
-    const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(lookupUrl), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usernames: [input], excludeBannedUsers: false }),
-    });
+    // Look up user ID from username via worker proxy
+    const res = await fetch(`${WORKER}/roblox/user?username=${encodeURIComponent(input)}`);
     const data = await res.json();
-    const user = data.data && data.data[0];
+    const user = data.Id ? { id: data.Id, name: data.Username } : null;
 
     if (!user) {
       errEl.textContent = `User "${input}" not found. Check the spelling.`;
@@ -1046,9 +1041,8 @@ async function verifyCode() {
   btn.disabled = true;
 
   try {
-    // Fetch profile description via corsproxy
-    const profileUrl = `https://users.roblox.com/v1/users/${pendingVerification.roblox_id}`;
-    const profileRes = await fetch('https://corsproxy.io/?' + encodeURIComponent(profileUrl));
+    // Fetch profile description via worker proxy
+    const profileRes = await fetch(`${WORKER}/roblox/profile?id=${pendingVerification.roblox_id}`);
     const profile = await profileRes.json();
     const description = profile.description || '';
 
